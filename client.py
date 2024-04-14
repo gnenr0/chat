@@ -1,37 +1,25 @@
-
-
 import socket
 import threading
-import queue
-import random
-from pyfiglet import Figlet
-import pyfiglet
-
-img = pyfiglet.figlet_format("\t Welcome to the UDP chat room \n")
-client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-client.bind(("localhost" , random.randint(8000, 9000)))
-name = input("What is your name? ")
-
-def recieve():
+def receive_messages(client_socket):
     while True:
-        try:
-            message, _ = client.recvfrom(1024)
-            print(message.decode())
-        except:
-            pass
+        message, _ = client_socket.recvfrom(1024)
+    
+        print("\nServer:", message.decode('utf-8'))
+        client_socket.sendto(message.encode('utf-8'), ('localhost', 25252))    
+        if message == "!QUIT":
+            (exit)
 
-t = threading.Thread(target=recieve)
-t.start()
+def main():
+    host = "localhost"  # Server IP
+    port = 25252        # Server Port
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-client.sendto(f"SIGNUP_TAG:{name}".encode(), ("localhost" , 2525))
+    receive_thread = threading.Thread(target=receive_messages, args=(client_socket,))
+    receive_thread.start()
 
-while True:
-    message = input("")
-    if message == "Quit!":
-        exit()
-    else:
-        client.sendto(f"{name}: {message}".encode(), ("localhost" , 2525))
+    while True:
+        message = input("Enter your message to send: ")
+        client_socket.sendto(message.encode('utf-8'), (host, port))
 
-
-
-
+if __name__ == "__main__":
+    main()
